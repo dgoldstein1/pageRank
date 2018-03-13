@@ -32,19 +32,32 @@ from networkx.readwrite import json_graph
 
 G=nx.DiGraph()
 
-def scrape_data(link):
+def scrape_data(url):
 	"""
-	scrapes relevant data from given link
-	@param {string} link
+	scrapes relevant data from given url
+	@param {string} url
 	@return {dict} {
 		url : link
-		count : number of external links
+		links : list of external links
 		title : title of the page
 		description : sample text
 	}
 	"""
-	pass
-	
+	http = httplib2.Http()
+	status, response = http.request(url)
+	# get links
+	links = []
+	for link in BeautifulSoup(response, "html.parser", parse_only=SoupStrainer('a')):
+	    if link.has_attr('href'):
+	        links.append(link['href'])
+
+	# return dictionary
+	return {
+		"url" : url,
+		"links" : links,
+		"title" : soup.find('span')['title'],
+		"description" : "todo"
+	}
 
 def httplib(link):
 	http = httplib2.Http()
@@ -68,7 +81,16 @@ def add_node_with_links(G, name, description, title, neighbors=[]):
 ## Tests ##
 ###########
 
+class ScrapeTesting(unittest.TestCase):
+	def test_scrapes_correct_values(self):
+		response = scrape_data("https://www.nytimes.com/")
+		self.assertIsNotNone(response)
+		self.assertEqual(response['url'],"https://www.nytimes.com/")
+		self.assertEqual(len(response['links']) > 0, True)
+
+
 class AddNodeTesting(unittest.TestCase):
+	# tests for adding node to graph
     def test_G_was_initialized(self):
         self.assertIsNotNone(G)
 
@@ -90,9 +112,6 @@ class AddNodeTesting(unittest.TestCase):
 def run_script():
 	# scrape links
 	print "scraping links"
-	for i in range(1):
-		httplib('http://www.nytimes.com')
-		
 	print "done \n"
 
 	# indexing page rank
@@ -112,13 +131,11 @@ if __name__ == '__main__':
 	parser.add_argument('--test',help='Run tests', action="store_true")
 	args = parser.parse_args()
 
-	print "Running Tests"
+	print "Running Tests \n"
 
-	suite = unittest.TestLoader().loadTestsFromTestCase(AddNodeTesting)
-	testsSuccessful= unittest.TextTestRunner(verbosity=2).run(suite)
-
-	# suite = unittest.TestLoader().loadTestsFromTestCase(AddNodeTesting)
-	# testsSuccessful = unittest.TextTestRunner().run(suite)
+	testsSuccessful = True
+	# testsSuccessful = unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(AddNodeTesting))
+	testsSuccessful = testsSuccessful and unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(ScrapeTesting))
 
 	if testsSuccessful.wasSuccessful():
 		# run_script()
