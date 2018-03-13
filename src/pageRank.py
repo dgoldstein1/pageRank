@@ -80,6 +80,10 @@ class AddNodeTesting(unittest.TestCase):
     	self.assertIsNotNone(G.nodes['test name']['indexDate'])
     	self.assertIsNotNone(G.nodes['test name']['id'])
 
+    def tearDown(self):
+    	G = nx.DiGraph()
+
+
 def run_script():
 	# scrape links
 	print "scraping links"
