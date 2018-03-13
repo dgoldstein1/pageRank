@@ -53,16 +53,16 @@ def httplib(link):
 	    if link.has_attr('href'):
 	        print link['href']
 
-def add_node_with_links(G, name, description, title, edges=[]):
+def add_node_with_links(G, name, description, title, neighbors=[]):
 	"""
 	util for adding node and links to graph
 	@param {nx.DiGraph}
 	@param {String}
 	@param {String}
-	@param {list} edges associated with this node
+	@param {list} neighbors with edges to this node
 	"""
 	G.add_node(name, description=description, title=title, indexDate=datetime.datetime.now(), id=uuid.uuid4())
-
+	[G.add_edge(name, node) for node in neighbors]
 
 ###########
 ## Tests ##
@@ -74,11 +74,14 @@ class AddNodeTesting(unittest.TestCase):
 
     def test_adds_correct_node(self):
     	add_node_with_links(G, "test name", "test description", "test title")
-    	self.assertEqual(G.number_of_nodes(), 1)
     	self.assertEqual(G.nodes()['test name']['description'], "test description")
     	self.assertEqual(G.nodes()['test name']['title'], "test title")
     	self.assertIsNotNone(G.nodes['test name']['indexDate'])
     	self.assertIsNotNone(G.nodes['test name']['id'])
+
+    def test_adds_correct_links(self):
+    	add_node_with_links(G, "test name", "test description", "test title", ["node 1","node 2"])
+    	self.assertEqual(G.number_of_edges(), 2)
 
     def tearDown(self):
     	G = nx.DiGraph()
