@@ -55,16 +55,9 @@ def scrape_data(url):
 	return {
 		"url" : url,
 		"links" : links,
-		"title" : soup.find('span')['title'],
+		"title" : BeautifulSoup(response, "html.parser"),
 		"description" : "todo"
 	}
-
-def httplib(link):
-	http = httplib2.Http()
-	status, response = http.request(link)
-	for link in BeautifulSoup(response, "html.parser", parse_only=SoupStrainer('a')):
-	    if link.has_attr('href'):
-	        print link['href']
 
 def add_node_with_links(G, name, description, title, neighbors=[]):
 	"""
@@ -134,7 +127,7 @@ if __name__ == '__main__':
 	print "Running Tests \n"
 
 	testsSuccessful = True
-	# testsSuccessful = unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(AddNodeTesting))
+	testsSuccessful = unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(AddNodeTesting))
 	testsSuccessful = testsSuccessful and unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(ScrapeTesting))
 
 	if testsSuccessful.wasSuccessful():
