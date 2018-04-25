@@ -22,6 +22,9 @@ from tqdm import tqdm
 import httplib2
 from bs4 import BeautifulSoup, SoupStrainer
 
+# threading
+from multiprocessing import Pool
+
 # networkx
 import networkx as nx
 from networkx.readwrite import json_graph
@@ -79,9 +82,48 @@ def add_node_with_links(G, name, description, title, neighbors=[]):
 	G.add_node(name, description=description, title=title, indexDate=datetime.datetime.now(), id=uuid.uuid4())
 	[G.add_edge(name, node) for node in neighbors]
 
+def crawl(max_time):
+	"""
+	crawls with links for a specified period of time, adding nodes to graph
+	@param {int} time in seconds
+	"""
+	start_time = time.time()
+
+	elapsed_time = time.time() - start_time
+
+
+def crawl_helper(urls = [], threads=15):
+	"""
+	multithreaded helper for scraping multiple arrays
+	@param {array} urls to scrape
+	@param {int} number of threads to use
+	@return {array} responses
+	"""
+	p = Pool(threads)  # Pool tells how many at a time
+	responses = p.map(scrape_data, urls)
+	p.terminate()
+	p.join()
+	return responses
+
+
 ###########
 ## Tests ##
 ###########
+
+class CrawlTesting(unittest.TestCase):
+	def test_runs_for_specified_amount_of_time(self):
+		start_time = time.time()
+		max_time = 3
+		crawl(max_time)
+		elapsed_time = time.time() - start_time
+		self.assertTrue(elapsed_time + 1 < max_time)
+
+	def test_crawl_helper(self):
+		responses = crawl_helper(["https://nytimes.com/","https://docs.python.org", "https://github.com/dgoldstein1"])
+		self.assertIsNotNone(responses)
+		for response in responses:
+			self.assertIsNotNone(response['url'])
+		self.assertTrue(len(responses), 3)
 
 class ScrapeTesting(unittest.TestCase):
 	def test_scrapes_correct_values(self):
@@ -135,13 +177,15 @@ if __name__ == '__main__':
 	# parse args
 	parser = argparse.ArgumentParser(description='Applies page rank to a webcrawl')
 	parser.add_argument('--test',help='Run tests', action="store_true")
+	parser.add_argument('--time',help='Total time for link crawling in seconds', type=int, default=10)
 	args = parser.parse_args()
 
 	print "Running Tests \n"
 
 	testsSuccessful = True
 	testsSuccessful = unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(AddNodeTesting))
-	testsSuccessful = testsSuccessful and unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(ScrapeTesting))
+	# testsSuccessful = testsSuccessful and unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(ScrapeTesting))
+	testsSuccessful = testsSuccessful and unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(CrawlTesting))
 
 	if testsSuccessful.wasSuccessful():
 		# run_script()
