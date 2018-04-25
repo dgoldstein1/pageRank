@@ -82,17 +82,38 @@ def add_node_with_links(G, name, description, title, neighbors=[]):
 	G.add_node(name, description=description, title=title, indexDate=datetime.datetime.now(), id=uuid.uuid4())
 	[G.add_edge(name, node) for node in neighbors]
 
-def crawl(max_time):
+def crawl(max_time, threads, startingLink):
 	"""
 	crawls with links for a specified period of time, adding nodes to graph
 	@param {int} time in seconds
+	@param {int} number of concurrent threads
 	"""
 	start_time = time.time()
 
 	elapsed_time = time.time() - start_time
 
 
-def crawl_helper(urls = [], threads=15):
+def crawl_recursion_helper(urls, start_time, max_time, threads):
+	"""
+	Scrapes urls, adds to graph, and scrapes children
+	Stopping condition is when time runs out
+	@param {array} urls
+	@param {double} when the process started
+	@param {threads} number of threads to use
+	@param {int} maxTime
+	"""
+	# if elapsed > max allowed
+	if time.time() - start_time > start_time + max_time:
+		return
+	# scrape urls and children
+	for resp in multithread_scrape(urls, threads):
+		if resp is not None:
+			# add to grap
+			add_node_with_links(G, resp["url"], resp["description"], resp["title"], resp["links"])
+			# recurse
+			return crawl_recursion_helper(resp["urls"], start_time, max_time, threads)
+
+def multithread_scrape(urls, threads):
 	"""
 	multithreaded helper for scraping multiple arrays
 	@param {array} urls to scrape
@@ -114,12 +135,12 @@ class CrawlTesting(unittest.TestCase):
 	def test_runs_for_specified_amount_of_time(self):
 		start_time = time.time()
 		max_time = 3
-		crawl(max_time)
+		crawl(max_time, 15, "https://www.nytimes.com/")
 		elapsed_time = time.time() - start_time
 		self.assertTrue(elapsed_time + 1 < max_time)
 
-	def test_crawl_helper(self):
-		responses = crawl_helper(["https://nytimes.com/","https://docs.python.org", "https://github.com/dgoldstein1"])
+	def test_multithread_scrape(self):
+		responses = multithread_scrape(["https://nytimes.com/","https://docs.python.org", "https://github.com/dgoldstein1"], 15)
 		self.assertIsNotNone(responses)
 		for response in responses:
 			self.assertIsNotNone(response['url'])
@@ -178,13 +199,15 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Applies page rank to a webcrawl')
 	parser.add_argument('--test',help='Run tests', action="store_true")
 	parser.add_argument('--time',help='Total time for link crawling in seconds', type=int, default=10)
+	parser.add_argument('--threads',help='Number of threads to run in parallel while scraping', type=int, default=20)
+	parser.add_argument('--startingLink',help='Link to start crawl from', type=str, default="https://www.nytimes.com/")
 	args = parser.parse_args()
 
 	print "Running Tests \n"
 
 	testsSuccessful = True
 	testsSuccessful = unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(AddNodeTesting))
-	# testsSuccessful = testsSuccessful and unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(ScrapeTesting))
+	testsSuccessful = testsSuccessful and unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(ScrapeTesting))
 	testsSuccessful = testsSuccessful and unittest.TextTestRunner(verbosity=2).run(unittest.TestLoader().loadTestsFromTestCase(CrawlTesting))
 
 	if testsSuccessful.wasSuccessful():
