@@ -51,12 +51,18 @@ def scrape_data(url):
 	    if link.has_attr('href'):
 	        links.append(link['href'])
 
+	# get description
+	soup = BeautifulSoup(response, "html.parser")
+	description = soup.find('meta', attrs={'name':'og:description'}) or soup.find('meta', attrs={'property':'description'}) or soup.find('meta', attrs={'name':'description'})
+	if description:
+		description = description.get('content')
+
 	# return dictionary
 	return {
 		"url" : url,
 		"links" : links,
 		"title" : BeautifulSoup(response, "html.parser"),
-		"description" : "todo"
+		"description" : description
 	}
 
 def add_node_with_links(G, name, description, title, neighbors=[]):
@@ -80,6 +86,7 @@ class ScrapeTesting(unittest.TestCase):
 		self.assertIsNotNone(response)
 		self.assertEqual(response['url'],"https://www.nytimes.com/")
 		self.assertEqual(len(response['links']) > 0, True)
+		self.assertEqual(response['description'], "The New York Times: Find breaking news, multimedia, reviews & opinion on Washington, business, sports, movies, travel, books, jobs, education, real estate, cars & more at nytimes.com.")
 
 
 class AddNodeTesting(unittest.TestCase):
