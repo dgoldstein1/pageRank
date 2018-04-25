@@ -44,7 +44,10 @@ def scrape_data(url):
 	}
 	"""
 	http = httplib2.Http()
-	status, response = http.request(url)
+	try:
+		status, response = http.request(url)
+	except Exception as e:
+		return None
 	# get links
 	links = []
 	for link in BeautifulSoup(response, "html.parser", parse_only=SoupStrainer('a')):
@@ -88,6 +91,9 @@ class ScrapeTesting(unittest.TestCase):
 		self.assertEqual(len(response['links']) > 0, True)
 		self.assertEqual(response['description'], "The New York Times: Find breaking news, multimedia, reviews & opinion on Washington, business, sports, movies, travel, books, jobs, education, real estate, cars & more at nytimes.com.")
 
+	def test_gracefully_handles_error(self):
+		response = scrape_data("this is a bad url")
+		self.assertIsNone(response)
 
 class AddNodeTesting(unittest.TestCase):
 	# tests for adding node to graph
