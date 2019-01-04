@@ -33,7 +33,7 @@ python src/pageRank.py --tests=true
 
 ## Authors
 
-* **David Goldstein** - [DavidCharlesGoldstein.com](http://www.davidcharlesgoldstein.com/) - [Decipher Technology Studios](http://deciphernow.com/)
+* **David Goldstein** - [DavidCharlesGoldstein.com](http://www.davidcharlesgoldstein.com/?github-pagerank) - [Decipher Technology Studios](http://deciphernow.com/)
 
 ## License
 
